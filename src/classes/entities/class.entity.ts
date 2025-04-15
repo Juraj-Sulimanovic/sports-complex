@@ -18,6 +18,12 @@ export enum SportType {
   SWIMMING = 'SWIMMING',
 }
 
+export enum ClassType {
+  GROUP = 'GROUP',
+  PRIVATE = 'PRIVATE',
+  SEMI_PRIVATE = 'SEMI_PRIVATE'
+}
+
 @Entity('classes')
 export class Class {
   @PrimaryGeneratedColumn()
@@ -60,6 +66,13 @@ export class Class {
 
   @OneToMany(() => Enrollment, enrollment => enrollment.class)
   enrollments: Enrollment[];
+
+  @Column({
+    type: 'enum',
+    enum: ClassType,
+    default: ClassType.GROUP
+  })
+  type: ClassType;
 
   @CreateDateColumn()
   createdAt: Date;

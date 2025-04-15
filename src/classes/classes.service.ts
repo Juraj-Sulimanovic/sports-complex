@@ -4,6 +4,8 @@ import { Repository } from 'typeorm';
 import { Class } from './entities/class.entity';
 import { Enrollment } from './entities/enrollment.entity';
 import { EnrollDto } from './dto/enroll.dto';
+import { CreateClassDto } from './dto/create-class.dto';
+import { UpdateClassDto } from './dto/update-class.dto';
 
 @Injectable()
 export class ClassesService {
@@ -75,5 +77,26 @@ export class ClassesService {
       userId,
     });
     return this.enrollmentRepository.save(enrollment);
+  }
+
+  async create(createClassDto: CreateClassDto): Promise<Class> {
+    const classEntity = this.classRepository.create({
+      ...createClassDto,
+      startTime: createClassDto.startTime,
+      endTime: createClassDto.endTime,
+    });
+
+    return this.classRepository.save(classEntity);
+  }
+
+  async update(id: number, updateClassDto: UpdateClassDto): Promise<Class> {
+    const existingClass = await this.findOne(id);
+    const updatedClass = this.classRepository.merge(existingClass, updateClassDto);
+    return this.classRepository.save(updatedClass);
+  }
+
+  async remove(id: number): Promise<void> {
+    const existingClass = await this.findOne(id);
+    await this.classRepository.remove(existingClass);
   }
 } 
