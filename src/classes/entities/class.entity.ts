@@ -5,13 +5,17 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   DeleteDateColumn,
+  OneToMany,
 } from 'typeorm';
 import { IsNotEmpty, IsEnum, IsInt, Min, Max, IsString } from 'class-validator';
+import { Enrollment } from './enrollment.entity';
 
 export enum SportType {
   BASEBALL = 'baseball',
   BASKETBALL = 'basketball',
   FOOTBALL = 'football',
+  TENNIS = 'TENNIS',
+  SWIMMING = 'SWIMMING',
 }
 
 @Entity('classes')
@@ -54,6 +58,9 @@ export class Class {
   @Column('text', { array: true })
   weekDays: string[];
 
+  @OneToMany(() => Enrollment, enrollment => enrollment.class)
+  enrollments: Enrollment[];
+
   @CreateDateColumn()
   createdAt: Date;
 
@@ -62,4 +69,4 @@ export class Class {
 
   @DeleteDateColumn()
   deletedAt: Date;
-} 
+}

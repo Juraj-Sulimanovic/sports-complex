@@ -5,11 +5,16 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   DeleteDateColumn,
-  BeforeInsert,
-  BeforeUpdate,
+  OneToMany,
 } from 'typeorm';
 import { IsEmail, IsNotEmpty, IsString, MinLength } from 'class-validator';
 import * as bcrypt from 'bcrypt';
+import { Enrollment } from '../../classes/entities/enrollment.entity';
+
+export enum UserRole {
+  USER = 'USER',
+  ADMIN = 'ADMIN',
+}
 
 @Entity('users')
 export class User {
@@ -27,6 +32,22 @@ export class User {
   @MinLength(8)
   password: string;
 
+  @Column()
+  firstName: string;
+
+  @Column()
+  lastName: string;
+
+  @Column({ default: true })
+  isActive: boolean;
+
+  @Column({
+    type: 'enum',
+    enum: UserRole,
+    default: UserRole.USER,
+  })
+  role: UserRole;
+
   @CreateDateColumn()
   createdAt: Date;
 
@@ -36,12 +57,11 @@ export class User {
   @DeleteDateColumn()
   deletedAt: Date;
 
-  @BeforeInsert()
-  @BeforeUpdate()
-  async hashPassword() {
-    if (this.password) {
-      this.password = await bcrypt.hash(this.password, 10);
-    }
+  @OneToMany(() => Enrollment, enrollment => enrollment.user)
+  enrollments: Enrollment[];
+
+  async setPassword(password: string): Promise<void> {
+    this.password = await bcrypt.hash(password, 10);
   }
 
   async validatePassword(password: string): Promise<boolean> {
