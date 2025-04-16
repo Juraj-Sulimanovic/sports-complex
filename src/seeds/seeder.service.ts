@@ -1,67 +1,87 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Class } from '../classes/entities/class.entity';
-import { Enrollment } from '../classes/entities/enrollment.entity';
 import { User } from '../users/entities/user.entity';
+import {
+  Enrollment,
+  EnrollmentStatus,
+} from '../classes/entities/enrollment.entity';
 import { classesSeed } from './classes.seed';
-import { enrollmentsSeed } from './enrollments.seed';
+// import { enrollmentsSeed } from './enrollments.seed';
 import { usersSeed } from './users.seed';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { DataSource } from 'typeorm';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { CreateClassDto } from 'src/classes/dto/create-class.dto';
 
 @Injectable()
 export class SeederService {
+  private readonly logger = new Logger(SeederService.name);
+
   constructor(
     @InjectRepository(Class)
     private readonly classRepository: Repository<Class>,
-    @InjectRepository(Enrollment)
-    private readonly enrollmentRepository: Repository<Enrollment>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    @InjectRepository(Enrollment)
+    private readonly enrollmentRepository: Repository<Enrollment>,
   ) {}
 
   async seed() {
+    await this.seedClasses();
     await this.seedUsers();
-    const classes = await this.seedClasses();
-    await this.seedEnrollments(classes);
+    await this.seedEnrollments();
   }
 
-  private async seedUsers() {
-    const existingUsers = await this.userRepository.count();
-    if (existingUsers === 0) {
-      await this.userRepository.save(usersSeed);
-      console.log('Users seeded successfully');
-    } else {
-      console.log('Users already exist, skipping seeding');
-    }
+  async seedClasses() {
+    const classes = classesSeed.map((classData) =>
+      this.classRepository.create(classData),
+    );
+    await this.classRepository.save(classes);
+    this.logger.log('Classes seeded successfully');
   }
 
-  private async seedClasses() {
-    const existingClasses = await this.classRepository.count();
-    if (existingClasses === 0) {
-      const classes = await this.classRepository.save(classesSeed);
-      console.log('Classes seeded successfully');
-      return classes;
-    } else {
-      console.log('Classes already exist, skipping seeding');
-      return await this.classRepository.find();
-    }
+  async seedUsers() {
+    const users = usersSeed.map((userData) =>
+      this.userRepository.create(userData),
+    );
+    await this.userRepository.save(users);
+    this.logger.log('Users seeded successfully');
   }
 
-  private async seedEnrollments(classes: Class[]) {
-    const existingEnrollments = await this.enrollmentRepository.count();
-    if (existingEnrollments === 0) {
-      // Map the enrollments to use the actual class IDs
-      const enrollmentsWithIds = enrollmentsSeed.map(enrollment => {
-        const classIndex = enrollment.classId - 1; // Convert 1-based index to 0-based
-        return {
-          ...enrollment,
-          classId: classes[classIndex].id,
-        };
+  async seedEnrollments() {
+    const enrollments = [
+      { classId: 1, userId: 1 },
+      { classId: 2, userId: 2 },
+      { classId: 3, userId: 3 },
+      { classId: 1, userId: 2 },
+      { classId: 2, userId: 1 }
+    ];
+
+    // Get all classes and users first
+    const classes = await this.classRepository.find();
+    const users = await this.userRepository.find();
+
+    // Create enrollments with proper class and user objects
+    const enrollmentsToSave = enrollments.map((enrollment) => {
+      const classEntity = classes.find((c) => c.id === enrollment.classId);
+      const userEntity = users.find((u) => u.id === enrollment.userId);
+
+      if (!classEntity || !userEntity) {
+        throw new Error(
+          `Class or User not found for enrollment: ${JSON.stringify(enrollment)}`,
+        );
+      }
+
+      return this.enrollmentRepository.create({
+        class: classEntity,
+        user: userEntity,
+        status: EnrollmentStatus.CONFIRMED,
       });
-      await this.enrollmentRepository.save(enrollmentsWithIds);
-      console.log('Enrollments seeded successfully');
-    } else {
-      console.log('Enrollments already exist, skipping seeding');
-    }
+    });
+
+    await this.enrollmentRepository.save(enrollmentsToSave);
+    this.logger.log('Enrollments seeded successfully');
   }
-} 
+}

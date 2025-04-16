@@ -1,36 +1,54 @@
-import { Module } from '@nestjs/common';
+import { Module, Logger } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { AuthModule } from './auth/auth.module';
-import { UsersModule } from './users/users.module';
-import { ClassesModule } from './classes/classes.module';
-import { SeederModule } from './seeds/seeder.module';
 import { AppController } from './app.controller';
-import { AppService } from './app.service';
-import { Class } from './classes/entities/class.entity';
-import { User } from './users/entities/user.entity';
+import { AuthModule } from './auth/auth.module';
+import { ClassesModule } from './classes/classes.module';
+import { UsersModule } from './users/users.module';
+import { SeederModule } from './seeds/seeder.module';
+import { HealthModule } from './health/health.module';
+import { RolesGuard } from './auth/guards/roles.guard';
+import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
+import { APP_GUARD } from '@nestjs/core';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({
-      isGlobal: true,
-    }),
+    ConfigModule.forRoot(),
     TypeOrmModule.forRoot({
       type: 'postgres',
-      host: process.env.DB_HOST || 'localhost',
-      port: parseInt(process.env.DB_PORT || '5432'),
-      username: process.env.DB_USERNAME || 'postgres',
-      password: process.env.DB_PASSWORD || 'postgres',
-      database: process.env.DB_DATABASE || 'sports_complex',
-      entities: [__dirname + '/**/*.entity{.ts,.js}'],
-      synchronize: true,
+      url: process.env.DATABASE_URL,
+      autoLoadEntities: true,
+      synchronize: process.env.NODE_ENV !== 'production',
+      logging: process.env.NODE_ENV !== 'production',
+      migrationsRun: false, // We don't need to run migrations if synchronize is true
     }),
     AuthModule,
     UsersModule,
     ClassesModule,
     SeederModule,
+    HealthModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: RolesGuard,
+    },
+  ],
 })
-export class AppModule {}
+export class AppModule {
+  private readonly logger = new Logger(AppModule.name);
+
+  constructor() {
+    this.logger.log(
+      `Application running in ${process.env.NODE_ENV || 'development'} mode`,
+    );
+    this.logger.log(
+      `Database synchronization: ${process.env.NODE_ENV !== 'production' ? 'enabled' : 'disabled'}`,
+    );
+  }
+}

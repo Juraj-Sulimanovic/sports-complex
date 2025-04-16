@@ -2,30 +2,45 @@ import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
-  CreateDateColumn,
   ManyToOne,
+  CreateDateColumn,
   JoinColumn,
 } from 'typeorm';
 import { Class } from './class.entity';
 import { User } from '../../users/entities/user.entity';
 
-@Entity('enrollments')
+export enum EnrollmentStatus {
+  PENDING = 'pending',
+  CONFIRMED = 'confirmed',
+  CANCELLED = 'cancelled',
+}
+
+@Entity()
 export class Enrollment {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => Class, (class_) => class_.enrollments)
+  @ManyToOne(() => Class)
+  @JoinColumn({ name: 'classId' })
   class: Class;
 
-  @Column()
-  classId: number;
-
-  @ManyToOne(() => User, user => user.enrollments)
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'userId' })
   user: User;
 
-  @Column()
-  userId: number;
+  @Column({
+    type: 'enum',
+    enum: EnrollmentStatus,
+    default: EnrollmentStatus.PENDING,
+  })
+  status: EnrollmentStatus;
+
+  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  createdAt: Date;
+
+  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  updatedAt: Date;
 
   @CreateDateColumn()
   enrolledAt: Date;
-} 
+}

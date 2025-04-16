@@ -3,6 +3,12 @@ import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { jwtConstants } from '../constants';
 
+interface JwtPayload {
+  sub: number;
+  email: string;
+  role: string;
+}
+
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor() {
@@ -13,9 +19,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  async validate(payload: any) {
+  async validate(payload: JwtPayload) {
     console.log('JWT Strategy - Validating payload:', payload);
-    
+
     if (!payload || !payload.sub || !payload.email) {
       console.error('JWT Strategy - Invalid payload:', payload);
       throw new UnauthorizedException('Invalid token payload');
@@ -26,10 +32,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       throw new UnauthorizedException('Missing role in token');
     }
 
-    return { 
-      userId: payload.sub, 
-      email: payload.email, 
-      role: payload.role 
+    return {
+      userId: payload.sub,
+      email: payload.email,
+      role: payload.role,
     };
   }
-} 
+}

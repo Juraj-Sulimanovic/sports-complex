@@ -1,18 +1,40 @@
-<p align="center">
-  <h1>Sports Complex</h1>
-</p>
+# Sports Complex
 
-## Project setup
+A NestJS-based API for managing sports classes and user enrollments.
+
+## Project Setup
+
+### Create a .env file
+```bash
+cp .env.example .env
+```
+
+### install the dependencies and setup the database
 ```bash
 make setup
 ```
 
-## Run the project
+### Run the development server
 ```bash
 make dev
 ```
 
-## Run tests
+## API Documentation
+
+Swagger documentation is available at: http://localhost:3000/api#/
+
+## Running tests and linters
+
 ```bash
-make test
+npm run test
+
+npm run test:cov
+
+npm run lint
+```
+
+## Run with Docker
+
+```bash
+make up
 ```

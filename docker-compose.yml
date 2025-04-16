@@ -1,0 +1,20 @@
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=postgres://postgres:postgres@host.docker.internal:5432/sports_complex
+      - JWT_SECRET=dev_jwt_secret_do_not_use_in_production
+      - JWT_EXPIRATION=1h
+      - NODE_ENV=development
+    env_file:
+      - .env
+    command: >
+      sh -c "
+        echo 'Waiting for database to be ready...' &&
+        sleep 2 &&
+        node dist/src/main.js
+      "
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

@@ -15,4 +15,4 @@ export const enrollmentsSeed = [
     classId: 3,
     userId: 3,
   },
-]; 
+];

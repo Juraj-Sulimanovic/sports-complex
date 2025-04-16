@@ -1,5 +1,5 @@
 import { User } from '../users/entities/user.entity';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 
 export const usersSeed: Partial<User>[] = [
   {
@@ -23,4 +23,4 @@ export const usersSeed: Partial<User>[] = [
     firstName: 'Mike',
     lastName: 'Johnson',
   },
-]; 
+];

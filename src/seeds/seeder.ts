@@ -5,7 +5,7 @@ import { SeederService } from './seeder.service';
 async function bootstrap() {
   const app = await NestFactory.createApplicationContext(AppModule);
   const seeder = app.get(SeederService);
-  
+
   try {
     await seeder.seed();
     console.log('Seeding completed successfully');
@@ -16,4 +16,4 @@ async function bootstrap() {
   }
 }
 
-bootstrap(); 
+bootstrap();

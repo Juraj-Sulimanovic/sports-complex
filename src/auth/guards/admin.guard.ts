@@ -1,4 +1,9 @@
-import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  CanActivate,
+  ExecutionContext,
+  ForbiddenException,
+} from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { UserRole } from '../../users/entities/user.entity';
 
@@ -9,7 +14,7 @@ export class AdminGuard implements CanActivate {
   ): boolean | Promise<boolean> | Observable<boolean> {
     const request = context.switchToHttp().getRequest();
     const user = request.user;
-    
+
     console.log('Admin Guard - User:', user);
 
     if (!user) {
@@ -23,4 +28,4 @@ export class AdminGuard implements CanActivate {
 
     return true;
   }
-} 
+}

@@ -11,4 +11,4 @@ import { Enrollment } from './entities/enrollment.entity';
   providers: [ClassesService],
   exports: [ClassesService],
 })
-export class ClassesModule {} 
+export class ClassesModule {}

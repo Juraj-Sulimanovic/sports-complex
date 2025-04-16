@@ -46,4 +46,4 @@ export class CreateInitialTables1700000000000 implements MigrationInterface {
       DROP TABLE IF EXISTS "users";
     `);
   }
-} 
+}

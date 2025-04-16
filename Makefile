@@ -25,5 +25,11 @@ start:
 dev:
 	npm run start:dev
 
+up:
+	docker compose up --build
+
+down:
+	docker compose down
+
 test:
 	npm run test

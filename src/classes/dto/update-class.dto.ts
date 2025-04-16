@@ -1,4 +1,12 @@
-import { IsEnum, IsInt, Min, Max, IsString, IsArray, IsOptional } from 'class-validator';
+import {
+  IsEnum,
+  IsInt,
+  Min,
+  Max,
+  IsString,
+  IsArray,
+  IsOptional,
+} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { SportType } from '../entities/class.entity';
 
@@ -6,7 +14,7 @@ export class UpdateClassDto {
   @ApiProperty({
     description: 'Class name',
     example: 'Basketball Basics',
-    required: false
+    required: false,
   })
   @IsOptional()
   @IsString()
@@ -16,7 +24,7 @@ export class UpdateClassDto {
     description: 'Sport type',
     enum: SportType,
     example: SportType.BASKETBALL,
-    required: false
+    required: false,
   })
   @IsOptional()
   @IsEnum(SportType)
@@ -25,7 +33,7 @@ export class UpdateClassDto {
   @ApiProperty({
     description: 'Class description',
     example: 'Learn the basics of basketball',
-    required: false
+    required: false,
   })
   @IsOptional()
   @IsString()
@@ -36,7 +44,7 @@ export class UpdateClassDto {
     example: 20,
     minimum: 1,
     maximum: 30,
-    required: false
+    required: false,
   })
   @IsOptional()
   @IsInt()
@@ -47,7 +55,7 @@ export class UpdateClassDto {
   @ApiProperty({
     description: 'Class start time (HH:MM format)',
     example: '09:00',
-    required: false
+    required: false,
   })
   @IsOptional()
   @IsString()
@@ -56,7 +64,7 @@ export class UpdateClassDto {
   @ApiProperty({
     description: 'Class end time (HH:MM format)',
     example: '10:00',
-    required: false
+    required: false,
   })
   @IsOptional()
   @IsString()
@@ -66,10 +74,10 @@ export class UpdateClassDto {
     description: 'Days of the week when the class takes place',
     example: ['Monday', 'Wednesday'],
     type: [String],
-    required: false
+    required: false,
   })
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
   weekDays?: string[];
-} 
+}

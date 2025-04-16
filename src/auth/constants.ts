@@ -1,3 +1,3 @@
 export const jwtConstants = {
-  secret: 'your-secret-key-here', // In production, this should be in an environment variable
-}; 
+  secret: process.env.JWT_SECRET || 'your-secret-key-here', // Fallback to a default value if not set
+};

@@ -5,7 +5,8 @@ export const classesSeed: Partial<Class>[] = [
   {
     name: 'Basketball Fundamentals',
     sportType: SportType.BASKETBALL,
-    description: 'Learn the basics of basketball including dribbling, shooting, and passing.',
+    description:
+      'Learn the basics of basketball including dribbling, shooting, and passing.',
     maxParticipants: 15,
     startTime: '09:00',
     endTime: '10:30',
@@ -38,4 +39,4 @@ export const classesSeed: Partial<Class>[] = [
     endTime: '16:30',
     weekDays: ['Wednesday', 'Friday'],
   },
-]; 
+];

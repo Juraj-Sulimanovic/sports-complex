@@ -1,12 +1,19 @@
-import { Controller, Get } from '@nestjs/common';
-import { AppService } from './app.service';
+import { Controller, Get, Redirect } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { Public } from './auth/decorators/public.decorator';
 
+@ApiTags('Root')
 @Controller()
 export class AppController {
-  constructor(private readonly appService: AppService) {}
-
+  @Public()
   @Get()
-  getHello(): string {
-    return this.appService.getHello();
+  @Redirect('/health', 301)
+  @ApiOperation({ summary: 'Redirect to health endpoint' })
+  @ApiResponse({
+    status: 301,
+    description: 'Redirects to the /health endpoint',
+  })
+  redirectToHealth() {
+    return;
   }
 }

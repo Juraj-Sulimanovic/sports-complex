@@ -8,7 +8,7 @@ import {
   OneToMany,
 } from 'typeorm';
 import { IsEmail, IsNotEmpty, IsString, MinLength } from 'class-validator';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 import { Enrollment } from '../../classes/entities/enrollment.entity';
 
 export enum UserRole {
@@ -57,7 +57,7 @@ export class User {
   @DeleteDateColumn()
   deletedAt: Date;
 
-  @OneToMany(() => Enrollment, enrollment => enrollment.user)
+  @OneToMany(() => Enrollment, (enrollment) => enrollment.user)
   enrollments: Enrollment[];
 
   async setPassword(password: string): Promise<void> {

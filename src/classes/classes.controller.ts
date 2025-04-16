@@ -1,207 +1,246 @@
-import { Controller, Get, Param, ParseIntPipe, Post, Body, Query, BadRequestException, UseGuards, Delete, Patch } from '@nestjs/common';
-import { ApiOperation, ApiParam, ApiResponse, ApiTags, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  Controller,
+  Get,
+  Param,
+  ParseIntPipe,
+  Post,
+  Body,
+  Query,
+  UseGuards,
+  Delete,
+  Put,
+  Req,
+} from '@nestjs/common';
+import {
+  ApiOperation,
+  ApiParam,
+  ApiResponse,
+  ApiTags,
+  ApiQuery,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { ClassesService } from './classes.service';
 import { Class } from './entities/class.entity';
 import { EnrollDto } from './dto/enroll.dto';
-import { AdminGuard } from '../auth/guards/admin.guard';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { UserRole } from '../users/entities/user.entity';
 import { CreateClassDto } from './dto/create-class.dto';
 import { UpdateClassDto } from './dto/update-class.dto';
+import { Public } from '../auth/decorators/public.decorator';
 
-@ApiTags('classes')
+@ApiTags('Classes')
 @Controller('classes')
 export class ClassesController {
   constructor(private readonly classesService: ClassesService) {}
 
+  @Public()
   @Get()
   @ApiOperation({
     summary: 'Get all classes',
-    description: 'Retrieves a list of all sports classes, optionally filtered by sport type.'
+    description:
+      'Retrieves a list of all sports classes, optionally filtered by sport type and day.',
   })
   @ApiQuery({
     name: 'sports',
     required: false,
-    description: 'Comma-separated list of sports to filter by (e.g., Basketball,Football)',
+    description:
+      'Comma-separated list of sports to filter by (e.g., Basketball,Football)',
+    type: String,
+  })
+  @ApiQuery({
+    name: 'day',
+    required: false,
+    description: 'Filter classes by day of the week (e.g., Monday, Tuesday)',
     type: String,
   })
   @ApiResponse({
     status: 200,
     description: 'The list of classes has been successfully retrieved.',
-    type: [Class]
+    type: [Class],
   })
-  async findAll(@Query('sports') sports?: string): Promise<Class[]> {
-    if (sports) {
-      const sportTypes = sports.split(',').map(s => s.trim());
-      return this.classesService.findBySports(sportTypes);
-    }
-    return this.classesService.findAll();
+  findAll(@Query('sports') sports?: string, @Query('day') day?: string) {
+    return this.classesService.findAll(sports?.split(','), day, undefined);
   }
 
+  @Public()
   @Get(':id')
   @ApiOperation({
     summary: 'Get class details by ID',
-    description: 'Retrieves detailed information about a specific sports class including schedule, description, and other relevant details.'
+    description:
+      'Retrieves detailed information about a specific sports class including schedule, description, and other relevant details.',
   })
   @ApiParam({
     name: 'id',
     description: 'Numeric ID of the class',
     example: 1,
     type: Number,
-    required: true
+    required: true,
   })
   @ApiResponse({
     status: 200,
     description: 'The class details have been successfully retrieved.',
-    type: Class
+    type: Class,
   })
   @ApiResponse({
     status: 404,
-    description: 'Class not found. The provided ID does not match any existing class.'
+    description:
+      'Class not found. The provided ID does not match any existing class.',
   })
   @ApiResponse({
     status: 400,
-    description: 'Invalid ID format. The provided ID must be a positive integer.'
+    description:
+      'Invalid ID format. The provided ID must be a positive integer.',
   })
-  async findOne(
-    @Param('id', ParseIntPipe) id: number,
-  ): Promise<Class> {
+  findOne(@Param('id', ParseIntPipe) id: number) {
     return this.classesService.findOne(id);
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
   @Post()
-  @UseGuards(JwtAuthGuard, AdminGuard)
-  @ApiBearerAuth()
   @ApiOperation({
-    summary: 'Create a new class (Admin only)',
-    description: 'Creates a new sports class with the provided details. Requires admin authentication.'
+    summary: 'Create a new class',
+    description: 'Creates a new sports class. Requires admin role.',
   })
+  @ApiBearerAuth('bearer')
   @ApiResponse({
     status: 201,
     description: 'The class has been successfully created.',
-    type: Class
+    type: Class,
   })
   @ApiResponse({
     status: 400,
-    description: 'Invalid input data. Please check the request body.'
+    description: 'Invalid input data. Please check the request body.',
   })
   @ApiResponse({
     status: 401,
-    description: 'Unauthorized. Valid JWT token required.'
+    description: 'Unauthorized. Valid JWT token required.',
   })
   @ApiResponse({
     status: 403,
-    description: 'Forbidden. Admin role required.'
+    description: 'Forbidden. Admin role required.',
   })
-  async create(@Body() createClassDto: CreateClassDto): Promise<Class> {
+  create(@Body() createClassDto: CreateClassDto) {
     return this.classesService.create(createClassDto);
   }
 
-  @Post(':id/enroll')
   @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
+  @Post(':id/enroll')
   @ApiOperation({
-    summary: 'Enroll a user in a class',
-    description: 'Enrolls a user in a specific sports class, checking for availability and capacity.'
+    summary: 'Enroll in a class',
+    description:
+      'Enrolls a user in a sports class. Requires authentication. Authenticated user will be enrolled if no userId is provided in the body.',
   })
+  @ApiBearerAuth('bearer')
   @ApiParam({
     name: 'id',
-    description: 'Numeric ID of the class to enroll in',
+    description: 'Numeric ID of the class',
     example: 1,
     type: Number,
-    required: true
+    required: true,
   })
   @ApiResponse({
     status: 201,
-    description: 'The user has been successfully enrolled in the class.'
+    description: 'The user has been successfully enrolled in the class.',
   })
   @ApiResponse({
     status: 404,
-    description: 'Class not found. The provided ID does not match any existing class.'
+    description:
+      'Class not found. The provided ID does not match any existing class.',
   })
   @ApiResponse({
     status: 400,
-    description: 'The class is full or the user is already enrolled.'
+    description: 'The class is full or the user is already enrolled.',
   })
-  async enroll(
+  enroll(
     @Param('id', ParseIntPipe) id: number,
     @Body() enrollDto: EnrollDto,
+    @Req() req: { user: { userId: number; email: string; role: string } },
   ) {
-    return this.classesService.enroll(id, enrollDto.userId);
+    console.log('Enrolling user:', req.user);
+    console.log('Enroll DTO:', enrollDto);
+    return this.classesService.enroll(id, enrollDto, req.user);
   }
 
-  @Patch(':id')
-  @UseGuards(JwtAuthGuard, AdminGuard)
-  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  @Put(':id')
   @ApiOperation({
-    summary: 'Update a class (Admin only)',
-    description: 'Updates an existing sports class with the provided details. Requires admin authentication.'
+    summary: 'Update a class',
+    description: 'Updates an existing sports class. Requires admin role.',
   })
+  @ApiBearerAuth('bearer')
   @ApiParam({
     name: 'id',
-    description: 'Numeric ID of the class to update',
+    description: 'Numeric ID of the class',
     example: 1,
     type: Number,
-    required: true
+    required: true,
   })
   @ApiResponse({
     status: 200,
     description: 'The class has been successfully updated.',
-    type: Class
+    type: Class,
   })
   @ApiResponse({
     status: 400,
-    description: 'Invalid input data. Please check the request body.'
+    description: 'Invalid input data. Please check the request body.',
   })
   @ApiResponse({
     status: 401,
-    description: 'Unauthorized. Valid JWT token required.'
+    description: 'Unauthorized. Valid JWT token required.',
   })
   @ApiResponse({
     status: 403,
-    description: 'Forbidden. Admin role required.'
+    description: 'Forbidden. Admin role required.',
   })
   @ApiResponse({
     status: 404,
-    description: 'Class not found. The provided ID does not match any existing class.'
+    description:
+      'Class not found. The provided ID does not match any existing class.',
   })
-  async update(
+  update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateClassDto: UpdateClassDto,
-  ): Promise<Class> {
+  ) {
     return this.classesService.update(id, updateClassDto);
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
   @Delete(':id')
-  @UseGuards(JwtAuthGuard, AdminGuard)
-  @ApiBearerAuth()
   @ApiOperation({
-    summary: 'Delete a class (Admin only)',
-    description: 'Deletes an existing sports class. Requires admin authentication.'
+    summary: 'Delete a class',
+    description: 'Deletes an existing sports class. Requires admin role.',
   })
+  @ApiBearerAuth('bearer')
   @ApiParam({
     name: 'id',
-    description: 'Numeric ID of the class to delete',
+    description: 'Numeric ID of the class',
     example: 1,
     type: Number,
-    required: true
+    required: true,
   })
   @ApiResponse({
     status: 200,
-    description: 'The class has been successfully deleted.'
+    description: 'The class has been successfully deleted.',
   })
   @ApiResponse({
     status: 401,
-    description: 'Unauthorized. Valid JWT token required.'
+    description: 'Unauthorized. Valid JWT token required.',
   })
   @ApiResponse({
     status: 403,
-    description: 'Forbidden. Admin role required.'
+    description: 'Forbidden. Admin role required.',
   })
   @ApiResponse({
     status: 404,
-    description: 'Class not found. The provided ID does not match any existing class.'
+    description:
+      'Class not found. The provided ID does not match any existing class.',
   })
-  async remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
+  remove(@Param('id', ParseIntPipe) id: number) {
     return this.classesService.remove(id);
   }
-} 
+}
